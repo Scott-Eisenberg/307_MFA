@@ -21,7 +21,7 @@ function MyApp() {
   }, []);
 
   function postUser(person) {
-  const promise = fetch("Http://localhost:8000/users", {
+  const promise = fetch("http://localhost:8000/users", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -31,20 +31,43 @@ function MyApp() {
   return promise;
   }
 
+  function deleteUser(id) {
+  const promise = fetch(`http://localhost:8000/users/${id}`, {
+    method: "DELETE",
+  });
+  return promise;
+  }
+
   function updateList(person) {
   postUser(person)
-    .then(() => setCharacters([...characters, person]))
+    .then((response) => {
+      if (response.status === 201) {
+        return response.json();
+      }
+      throw new Error(`Unexpected status code: ${response.status}`);
+    })
+    .then((newUser) => {
+      setCharacters([...characters, newUser]);
+    })
     .catch((error) => {
       console.log(error);
     });
 }
 
 
-  function removeOneCharacter(index) {
-    const updated = characters.filter((character, i) => {
-      return i !== index;
-    });
-    setCharacters(updated);
+  function removeOneCharacter(id) {
+    deleteUser(id)
+      .then((response) => {
+        if (response.status === 204) {
+          const updated = characters.filter((character) => {
+            return character.id !== id;
+          });
+          setCharacters(updated);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
 return (
   <div className="container">
